@@ -40,7 +40,7 @@ MemAllocateInfo::MemAllocateInfo(VkDevice device, VkBuffer buffer, VkMemoryPrope
   VkMemoryDedicatedRequirements   dedicatedRegs = {VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS};
   VkMemoryRequirements2           memReqs       = {VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2, &dedicatedRegs};
 
-  vkGetBufferMemoryRequirements2(device, &bufferReqs, &memReqs);
+  rmaDmaVkGetBufferMemoryRequirements2(device, &bufferReqs, &memReqs);
 
   m_memReqs  = memReqs.memoryRequirements;
   m_memProps = memProps;
@@ -59,7 +59,7 @@ MemAllocateInfo::MemAllocateInfo(VkDevice device, VkImage image, VkMemoryPropert
   VkMemoryDedicatedRequirements  dedicatedRegs = {VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS};
   VkMemoryRequirements2          memReqs       = {VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2, &dedicatedRegs};
 
-  vkGetImageMemoryRequirements2(device, &imageReqs, &memReqs);
+  rmaDmaVkGetImageMemoryRequirements2(device, &imageReqs, &memReqs);
 
   m_memReqs  = memReqs.memoryRequirements;
   m_memProps = memProps;

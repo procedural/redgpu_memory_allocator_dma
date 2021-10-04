@@ -11,4 +11,5 @@ add_library(redgpu_memory_allocator_dma SHARED
   memallocator_vk.cpp
   memorymanagement_vk.cpp
   nvprint.cpp
+  redgpu_memory_allocator_functions.cpp
 )

@@ -281,13 +281,13 @@ void DeviceMemoryAllocator::init(VkDevice device, VkPhysicalDevice physicalDevic
   // always default to NVVK_DEFAULT_MEMORY_BLOCKSIZE
   m_blockSize      = blockSize ? blockSize : NVVK_DEFAULT_MEMORY_BLOCKSIZE;
 
-  vkGetPhysicalDeviceMemoryProperties(physicalDevice, &m_memoryProperties);
+  rmaDmaVkGetPhysicalDeviceMemoryProperties(physicalDevice, &m_memoryProperties);
 
   // Retrieving the max allocation size, can be lowered with maxSize
   VkPhysicalDeviceProperties2            prop2{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
   VkPhysicalDeviceMaintenance3Properties vkProp{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_3_PROPERTIES};
   prop2.pNext = &vkProp;
-  vkGetPhysicalDeviceProperties2(physicalDevice, &prop2);
+  rmaDmaVkGetPhysicalDeviceProperties2(physicalDevice, &prop2);
   m_maxAllocationSize = maxSize > 0 ? std::min(maxSize, vkProp.maxMemoryAllocationSize) : vkProp.maxMemoryAllocationSize;
 
 
@@ -304,9 +304,9 @@ void DeviceMemoryAllocator::freeAll()
 
     if(it.mapped)
     {
-      vkUnmapMemory(m_device, it.mem);
+      rmaDmaVkUnmapMemory(m_device, it.mem);
     }
-    vkFreeMemory(m_device, it.mem, nullptr);
+    rmaDmaVkFreeMemory(m_device, it.mem, nullptr);
   }
 
   m_allocations.clear();
@@ -329,14 +329,14 @@ void DeviceMemoryAllocator::deinit()
       assert("not all blocks were unmapped properly");
       if(it.mem)
       {
-        vkUnmapMemory(m_device, it.mem);
+        rmaDmaVkUnmapMemory(m_device, it.mem);
       }
     }
     if(it.mem)
     {
       if(it.isFirst && m_keepFirst)
       {
-        vkFreeMemory(m_device, it.mem, nullptr);
+        rmaDmaVkFreeMemory(m_device, it.mem, nullptr);
       }
       else
       {
@@ -593,12 +593,10 @@ AllocationID DeviceMemoryAllocator::allocInternal(const VkMemoryRequirements&   
   block.allocateFlags      = state.allocateFlags;
   block.allocateDeviceMask = state.allocateDeviceMask;
 
-  result = allocBlockMemory(id, memInfo, block.mem);
+  result = allocBlockMemory(id, memInfo, block.mem, m_debugName);
 
   if(result == VK_SUCCESS)
   {
-    nvvk::DebugUtil(m_device).setObjectName(block.mem, m_debugName);
-
     m_allocatedSize += block.allocationSize;
 
     uint32_t offset;
@@ -682,7 +680,7 @@ void* DeviceMemoryAllocator::map(AllocationID allocationID, VkResult *pResult)
 
   if(!block.mapped)
   {
-    VkResult result = vkMapMemory(m_device, block.mem, 0, block.allocationSize, 0, (void**)&block.mapped);
+    VkResult result = rmaDmaVkMapMemory(m_device, block.mem, 0, block.allocationSize, 0, (void**)&block.mapped);
     if (pResult)
     {
       *pResult = result;
@@ -701,7 +699,7 @@ void DeviceMemoryAllocator::unmap(AllocationID allocationID)
   if(--block.mapCount == 0)
   {
     block.mapped = nullptr;
-    vkUnmapMemory(m_device, block.mem);
+    rmaDmaVkUnmapMemory(m_device, block.mem);
   }
 }
 
@@ -724,7 +722,7 @@ VkImage DeviceMemoryAllocator::createImage(const VkImageCreateInfo& createInfo,
 
   imageReqs.image = image;
   memReqs.pNext   = &dedicatedRegs;
-  vkGetImageMemoryRequirements2(m_device, &imageReqs, &memReqs);
+  rmaDmaVkGetImageMemoryRequirements2(m_device, &imageReqs, &memReqs);
 
   VkBool32 useDedicated = m_forceDedicatedAllocation || dedicatedRegs.prefersDedicatedAllocation;
 
@@ -737,7 +735,7 @@ VkImage DeviceMemoryAllocator::createImage(const VkImageCreateInfo& createInfo,
 
   if(allocation.mem == VK_NULL_HANDLE)
   {
-    vkDestroyImage(m_device, image, nullptr);
+    rmaDmaVkDestroyImage(m_device, image, nullptr);
     result = VK_ERROR_OUT_OF_POOL_MEMORY;
     return VK_NULL_HANDLE;
   }
@@ -747,10 +745,10 @@ VkImage DeviceMemoryAllocator::createImage(const VkImageCreateInfo& createInfo,
   bindInfos.memory                = allocation.mem;
   bindInfos.memoryOffset          = allocation.offset;
 
-  result = vkBindImageMemory2(m_device, 1, &bindInfos);
+  result = rmaDmaVkBindImageMemory2(m_device, 1, &bindInfos);
   if(result != VK_SUCCESS)
   {
-    vkDestroyImage(m_device, image, nullptr);
+    rmaDmaVkDestroyImage(m_device, image, nullptr);
     return VK_NULL_HANDLE;
   }
 
@@ -777,7 +775,7 @@ VkBuffer DeviceMemoryAllocator::createBuffer(const VkBufferCreateInfo& createInf
 
   bufferReqs.buffer = buffer;
   memReqs.pNext     = &dedicatedRegs;
-  vkGetBufferMemoryRequirements2(m_device, &bufferReqs, &memReqs);
+  rmaDmaVkGetBufferMemoryRequirements2(m_device, &bufferReqs, &memReqs);
 
   // for buffers don't use "preferred", but only requires
   VkBool32 useDedicated = m_forceDedicatedAllocation || dedicatedRegs.requiresDedicatedAllocation;
@@ -790,7 +788,7 @@ VkBuffer DeviceMemoryAllocator::createBuffer(const VkBufferCreateInfo& createInf
 
   if(allocation.mem == VK_NULL_HANDLE)
   {
-    vkDestroyBuffer(m_device, buffer, nullptr);
+    rmaDmaVkDestroyBuffer(m_device, buffer, nullptr);
     result = VK_ERROR_OUT_OF_POOL_MEMORY;
     return VK_NULL_HANDLE;
   }
@@ -800,10 +798,10 @@ VkBuffer DeviceMemoryAllocator::createBuffer(const VkBufferCreateInfo& createInf
   bindInfos.memory                 = allocation.mem;
   bindInfos.memoryOffset           = allocation.offset;
 
-  result = vkBindBufferMemory2(m_device, 1, &bindInfos);
+  result = rmaDmaVkBindBufferMemory2(m_device, 1, &bindInfos);
   if(result != VK_SUCCESS)
   {
-    vkDestroyBuffer(m_device, buffer, nullptr);
+    rmaDmaVkDestroyBuffer(m_device, buffer, nullptr);
     return VK_NULL_HANDLE;
   }
 

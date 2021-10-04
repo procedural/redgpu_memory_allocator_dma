@@ -27,15 +27,7 @@
 #include "memallocator_vk.hpp"
 #include "trangeallocator.hpp"
 
-#define VK_NO_PROTOTYPES
-#ifdef _WIN32
-#include "C:/VulkanSDK/1.2.135.0/Include/vulkan/vulkan/vulkan_core.h"
-#include "C:/VulkanSDK/1.2.135.0/Include/vulkan/vulkan/vulkan_beta.h"
-#endif
-#ifdef __linux__
-#include "/opt/RedGpuSDK/sdk/1.2.135.0/x86_64/include/vulkan/vulkan_core.h"
-#include "/opt/RedGpuSDK/sdk/1.2.135.0/x86_64/include/vulkan/vulkan_beta.h"
-#endif
+#include "redgpu_memory_allocator_functions.h"
 
 namespace nvvk {
 
@@ -535,26 +527,26 @@ protected:
   // For derived memory allocators you can do special purpose operations via overloading these functions.
   // A typical use-case would be export/import the memory to another API.
 
-  virtual VkResult allocBlockMemory(BlockID id, VkMemoryAllocateInfo& memInfo, VkDeviceMemory& deviceMemory)
+  virtual VkResult allocBlockMemory(BlockID id, VkMemoryAllocateInfo& memInfo, VkDeviceMemory& deviceMemory, const std::string& name)
   {
     //s_allocDebugBias++;
-    return vkAllocateMemory(m_device, &memInfo, nullptr, &deviceMemory);
+    return rmaDmaVkAllocateMemory(m_device, &memInfo, nullptr, &deviceMemory, name.c_str());
   }
   virtual void freeBlockMemory(BlockID id, VkDeviceMemory deviceMemory)
   {
     //s_allocDebugBias--;
-    vkFreeMemory(m_device, deviceMemory, nullptr);
+    rmaDmaVkFreeMemory(m_device, deviceMemory, nullptr);
   }
   virtual void resizeBlocks(uint32_t count) {}
 
   virtual VkResult createBufferInternal(VkDevice device, const VkBufferCreateInfo* info, VkBuffer* buffer)
   {
-    return vkCreateBuffer(device, info, nullptr, buffer);
+    return rmaDmaVkCreateBuffer(device, info, nullptr, buffer);
   }
 
   virtual VkResult createImageInternal(VkDevice device, const VkImageCreateInfo* info, VkImage* image)
   {
-    return vkCreateImage(device, info, nullptr, image);
+    return rmaDmaVkCreateImage(device, info, nullptr, image);
   }
 };
 

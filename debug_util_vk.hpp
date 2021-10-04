@@ -31,13 +31,7 @@
 #include <string.h>
 #include <string>
 
-#define VK_NO_PROTOTYPES
-#ifdef _WIN32
-#include "C:/VulkanSDK/1.2.135.0/Include/vulkan/vulkan/vulkan_core.h"
-#endif
-#ifdef __linux__
-#include "/opt/RedGpuSDK/sdk/1.2.135.0/x86_64/include/vulkan/vulkan_core.h"
-#endif
+#include "redgpu_memory_allocator_functions.h"
 
 namespace nvvk {
 
@@ -54,45 +48,6 @@ public:
 
   void setup(VkDevice device) { m_device = device; }
 
-  void setObjectName(const uint64_t object, const std::string& name, VkObjectType t)
-  {
-    if(s_enabled)
-    {
-      VkDebugUtilsObjectNameInfoEXT s{VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT, nullptr, t, object, name.c_str()};
-      vkSetDebugUtilsObjectNameEXT(m_device, &s);
-    }
-  }
-
-  // clang-format off
-  void setObjectName(VkBuffer object, const std::string& name)                  { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_BUFFER); }
-  void setObjectName(VkBufferView object, const std::string& name)              { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_BUFFER_VIEW); }
-  void setObjectName(VkCommandBuffer object, const std::string& name)           { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_COMMAND_BUFFER ); }
-  void setObjectName(VkCommandPool object, const std::string& name)             { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_COMMAND_POOL ); }
-  void setObjectName(VkDescriptorPool object, const std::string& name)          { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_DESCRIPTOR_POOL); }
-  void setObjectName(VkDescriptorSet object, const std::string& name)           { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_DESCRIPTOR_SET); }
-  void setObjectName(VkDescriptorSetLayout object, const std::string& name)     { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT); }
-  void setObjectName(VkDeviceMemory object, const std::string& name)            { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_DEVICE_MEMORY); }
-  void setObjectName(VkFramebuffer object, const std::string& name)             { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_FRAMEBUFFER); }
-  void setObjectName(VkImage object, const std::string& name)                   { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_IMAGE); }
-  void setObjectName(VkImageView object, const std::string& name)               { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_IMAGE_VIEW); }
-  void setObjectName(VkPipeline object, const std::string& name)                { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_PIPELINE); }
-  void setObjectName(VkPipelineLayout object, const std::string& name)          { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_PIPELINE_LAYOUT); }
-  void setObjectName(VkQueryPool object, const std::string& name)               { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_QUERY_POOL); }
-  void setObjectName(VkQueue object, const std::string& name)                   { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_QUEUE); }
-  void setObjectName(VkRenderPass object, const std::string& name)              { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_RENDER_PASS); }
-  void setObjectName(VkSampler object, const std::string& name)                 { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_SAMPLER); }
-  void setObjectName(VkSemaphore object, const std::string& name)               { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_SEMAPHORE); }
-  void setObjectName(VkShaderModule object, const std::string& name)            { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_SHADER_MODULE); }
-  void setObjectName(VkSwapchainKHR object, const std::string& name)            { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_SWAPCHAIN_KHR); }
-
-#if VK_NV_ray_tracing
-  void setObjectName(VkAccelerationStructureNV object, const std::string& name)  { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_NV); }
-#endif
-#if VK_KHR_acceleration_structure
-  void setObjectName(VkAccelerationStructureKHR object, const std::string& name) { setObjectName((uint64_t)object, name, VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR); }
-#endif
-  // clang-format on
-
   //
   //---------------------------------------------------------------------------
   //
@@ -101,14 +56,14 @@ public:
     if(s_enabled)
     {
       VkDebugUtilsLabelEXT s{VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT, nullptr, label.c_str(), {1.0f, 1.0f, 1.0f, 1.0f}};
-      vkCmdBeginDebugUtilsLabelEXT(cmdBuf, &s);
+      rmaDmaVkCmdBeginDebugUtilsLabelEXT(cmdBuf, &s);
     }
   }
   void endLabel(VkCommandBuffer cmdBuf)
   {
     if(s_enabled)
     {
-      vkCmdEndDebugUtilsLabelEXT(cmdBuf);
+      rmaDmaVkCmdEndDebugUtilsLabelEXT(cmdBuf);
     }
   }
   void insertLabel(VkCommandBuffer cmdBuf, const std::string& label)
@@ -116,7 +71,7 @@ public:
     if(s_enabled)
     {
       VkDebugUtilsLabelEXT s{VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT, nullptr, label.c_str(), {1.0f, 1.0f, 1.0f, 1.0f}};
-      vkCmdInsertDebugUtilsLabelEXT(cmdBuf, &s);
+      rmaDmaVkCmdInsertDebugUtilsLabelEXT(cmdBuf, &s);
     }
   }
   //
@@ -130,14 +85,14 @@ public:
       if(s_enabled)
       {
         VkDebugUtilsLabelEXT s{VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT, nullptr, label.c_str(), {1.0f, 1.0f, 1.0f, 1.0f}};
-        vkCmdBeginDebugUtilsLabelEXT(cmdBuf, &s);
+        rmaDmaVkCmdBeginDebugUtilsLabelEXT(cmdBuf, &s);
       }
     }
     ~ScopedCmdLabel()
     {
       if(s_enabled)
       {
-        vkCmdEndDebugUtilsLabelEXT(m_cmdBuf);
+        rmaDmaVkCmdEndDebugUtilsLabelEXT(m_cmdBuf);
       }
     }
     void setLabel(const std::string& label)
@@ -145,7 +100,7 @@ public:
       if(s_enabled)
       {
         VkDebugUtilsLabelEXT s{VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT, nullptr, label.c_str(), {1.0f, 1.0f, 1.0f, 1.0f}};
-        vkCmdInsertDebugUtilsLabelEXT(m_cmdBuf, &s);
+        rmaDmaVkCmdInsertDebugUtilsLabelEXT(m_cmdBuf, &s);
       }
     }
 
