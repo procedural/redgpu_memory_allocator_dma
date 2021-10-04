@@ -27,6 +27,7 @@
 #include "memallocator_vk.hpp"
 #include "trangeallocator.hpp"
 
+#define VK_NO_PROTOTYPES
 #ifdef _WIN32
 #include "C:/VulkanSDK/1.2.135.0/Include/vulkan/vulkan/vulkan_core.h"
 #include "C:/VulkanSDK/1.2.135.0/Include/vulkan/vulkan/vulkan_core.h"

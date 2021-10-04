@@ -19,6 +19,7 @@
 
 #pragma once
 
+#define VK_NO_PROTOTYPES
 #ifdef _WIN32
 #include "C:/VulkanSDK/1.2.135.0/Include/vulkan/vulkan/vulkan_core.h"
 #endif
