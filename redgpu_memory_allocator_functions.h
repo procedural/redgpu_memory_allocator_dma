@@ -21,23 +21,23 @@
 extern "C" {
 #endif
 
-VKAPI_ATTR void     VKAPI_CALL rmaDmaVkGetPhysicalDeviceProperties2      (VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties2 * pProperties);
-VKAPI_ATTR void     VKAPI_CALL rmaDmaVkGetPhysicalDeviceMemoryProperties (VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties * pMemoryProperties);
-VKAPI_ATTR VkResult VKAPI_CALL rmaDmaVkAllocateMemory                    (VkDevice device, const VkMemoryAllocateInfo * pAllocateInfo, const VkAllocationCallbacks * pAllocator, VkDeviceMemory * pMemory, const char * name);
-VKAPI_ATTR void     VKAPI_CALL rmaDmaVkFreeMemory                        (VkDevice device, VkDeviceMemory memory, const VkAllocationCallbacks * pAllocator);
-VKAPI_ATTR VkResult VKAPI_CALL rmaDmaVkMapMemory                         (VkDevice device, VkDeviceMemory memory, VkDeviceSize offset, VkDeviceSize size, VkMemoryMapFlags flags, void ** ppData);
-VKAPI_ATTR void     VKAPI_CALL rmaDmaVkUnmapMemory                       (VkDevice device, VkDeviceMemory memory);
-VKAPI_ATTR VkResult VKAPI_CALL rmaDmaVkBindBufferMemory2                 (VkDevice device, uint32_t bindInfoCount, const VkBindBufferMemoryInfo * pBindInfos);
-VKAPI_ATTR VkResult VKAPI_CALL rmaDmaVkBindImageMemory2                  (VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo * pBindInfos);
-VKAPI_ATTR void     VKAPI_CALL rmaDmaVkGetBufferMemoryRequirements2      (VkDevice device, const VkBufferMemoryRequirementsInfo2 * pInfo, VkMemoryRequirements2 * pMemoryRequirements);
-VKAPI_ATTR void     VKAPI_CALL rmaDmaVkGetImageMemoryRequirements2       (VkDevice device, const VkImageMemoryRequirementsInfo2 * pInfo, VkMemoryRequirements2 * pMemoryRequirements);
-VKAPI_ATTR VkResult VKAPI_CALL rmaDmaVkCreateBuffer                      (VkDevice device, const VkBufferCreateInfo * pCreateInfo, const VkAllocationCallbacks * pAllocator, VkBuffer * pBuffer);
-VKAPI_ATTR void     VKAPI_CALL rmaDmaVkDestroyBuffer                     (VkDevice device, VkBuffer buffer, const VkAllocationCallbacks * pAllocator);
-VKAPI_ATTR VkResult VKAPI_CALL rmaDmaVkCreateImage                       (VkDevice device, const VkImageCreateInfo * pCreateInfo, const VkAllocationCallbacks * pAllocator, VkImage * pImage);
-VKAPI_ATTR void     VKAPI_CALL rmaDmaVkDestroyImage                      (VkDevice device, VkImage image, const VkAllocationCallbacks * pAllocator);
-VKAPI_ATTR void     VKAPI_CALL rmaDmaVkCmdInsertDebugUtilsLabelEXT       (VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT * pLabelInfo);
-VKAPI_ATTR void     VKAPI_CALL rmaDmaVkCmdBeginDebugUtilsLabelEXT        (VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT * pLabelInfo);
-VKAPI_ATTR void     VKAPI_CALL rmaDmaVkCmdEndDebugUtilsLabelEXT          (VkCommandBuffer commandBuffer);
+REDGPU_DECLSPEC void     REDGPU_API rmaDmaVkGetPhysicalDeviceProperties2      (VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties2 * pProperties);
+REDGPU_DECLSPEC void     REDGPU_API rmaDmaVkGetPhysicalDeviceMemoryProperties (VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties * pMemoryProperties);
+REDGPU_DECLSPEC VkResult REDGPU_API rmaDmaVkAllocateMemory                    (VkDevice device, const VkMemoryAllocateInfo * pAllocateInfo, const VkAllocationCallbacks * pAllocator, VkDeviceMemory * pMemory, const char * name);
+REDGPU_DECLSPEC void     REDGPU_API rmaDmaVkFreeMemory                        (VkDevice device, VkDeviceMemory memory, const VkAllocationCallbacks * pAllocator);
+REDGPU_DECLSPEC VkResult REDGPU_API rmaDmaVkMapMemory                         (VkDevice device, VkDeviceMemory memory, VkDeviceSize offset, VkDeviceSize size, VkMemoryMapFlags flags, void ** ppData);
+REDGPU_DECLSPEC void     REDGPU_API rmaDmaVkUnmapMemory                       (VkDevice device, VkDeviceMemory memory);
+REDGPU_DECLSPEC VkResult REDGPU_API rmaDmaVkBindBufferMemory2                 (VkDevice device, uint32_t bindInfoCount, const VkBindBufferMemoryInfo * pBindInfos);
+REDGPU_DECLSPEC VkResult REDGPU_API rmaDmaVkBindImageMemory2                  (VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo * pBindInfos);
+REDGPU_DECLSPEC void     REDGPU_API rmaDmaVkGetBufferMemoryRequirements2      (VkDevice device, const VkBufferMemoryRequirementsInfo2 * pInfo, VkMemoryRequirements2 * pMemoryRequirements);
+REDGPU_DECLSPEC void     REDGPU_API rmaDmaVkGetImageMemoryRequirements2       (VkDevice device, const VkImageMemoryRequirementsInfo2 * pInfo, VkMemoryRequirements2 * pMemoryRequirements);
+REDGPU_DECLSPEC VkResult REDGPU_API rmaDmaVkCreateBuffer                      (VkDevice device, const VkBufferCreateInfo * pCreateInfo, const VkAllocationCallbacks * pAllocator, VkBuffer * pBuffer);
+REDGPU_DECLSPEC void     REDGPU_API rmaDmaVkDestroyBuffer                     (VkDevice device, VkBuffer buffer, const VkAllocationCallbacks * pAllocator);
+REDGPU_DECLSPEC VkResult REDGPU_API rmaDmaVkCreateImage                       (VkDevice device, const VkImageCreateInfo * pCreateInfo, const VkAllocationCallbacks * pAllocator, VkImage * pImage);
+REDGPU_DECLSPEC void     REDGPU_API rmaDmaVkDestroyImage                      (VkDevice device, VkImage image, const VkAllocationCallbacks * pAllocator);
+REDGPU_DECLSPEC void     REDGPU_API rmaDmaVkCmdInsertDebugUtilsLabelEXT       (VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT * pLabelInfo);
+REDGPU_DECLSPEC void     REDGPU_API rmaDmaVkCmdBeginDebugUtilsLabelEXT        (VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT * pLabelInfo);
+REDGPU_DECLSPEC void     REDGPU_API rmaDmaVkCmdEndDebugUtilsLabelEXT          (VkCommandBuffer commandBuffer);
 
 #ifdef __cplusplus
 }
