@@ -45,14 +45,15 @@ static const MemHandle NullMemHandle = nullptr;
 class MemAllocateInfo
 {
 public:
-  MemAllocateInfo(const VkMemoryRequirements& memReqs,  // determine size, alignment and memory type
+  MemAllocateInfo(RedContext context, unsigned gpuIndex,
+                  const VkMemoryRequirements& memReqs,  // determine size, alignment and memory type
                   VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,  // determine device_local, host_visible, host coherent etc...
                   bool isTilingOptimal = false  // determine if the alocation is going to be used for an VK_IMAGE_TILING_OPTIMAL image
   );
 
   // Convenience constructures that infer the allocation information from the Vulkan objects directly
-  MemAllocateInfo(VkDevice device, VkBuffer buffer, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-  MemAllocateInfo(VkDevice device, VkImage image, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  MemAllocateInfo(RedContext context, unsigned gpuIndex, VkDevice device, VkBuffer buffer, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  MemAllocateInfo(RedContext context, unsigned gpuIndex, VkDevice device, VkImage image, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
   // Determines which heap to allocate from
   MemAllocateInfo& setMemoryProperties(VkMemoryPropertyFlags flags);
@@ -88,6 +89,8 @@ public:
 
 
 private:
+  RedContext            m_context{NULL};
+  unsigned              m_gpuIndex{0};
   VkBuffer              m_dedicatedBuffer{VK_NULL_HANDLE};
   VkImage               m_dedicatedImage{VK_NULL_HANDLE};
   VkMemoryAllocateFlags m_allocateFlags{0};

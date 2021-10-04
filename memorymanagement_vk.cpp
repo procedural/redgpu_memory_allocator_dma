@@ -273,21 +273,23 @@ void DeviceMemoryAllocator::destroyID(AllocationID id)
 
 const float DeviceMemoryAllocator::DEFAULT_PRIORITY = 0.5f;
 
-void DeviceMemoryAllocator::init(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize blockSize, VkDeviceSize maxSize)
+void DeviceMemoryAllocator::init(RedContext context, unsigned gpuIndex, VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize blockSize, VkDeviceSize maxSize)
 {
   assert(!m_device);
+  m_context        = context;
+  m_gpuIndex       = gpuIndex;
   m_device         = device;
   m_physicalDevice = physicalDevice;
   // always default to NVVK_DEFAULT_MEMORY_BLOCKSIZE
   m_blockSize      = blockSize ? blockSize : NVVK_DEFAULT_MEMORY_BLOCKSIZE;
 
-  rmaDmaVkGetPhysicalDeviceMemoryProperties(physicalDevice, &m_memoryProperties);
+  rmaDmaVkGetPhysicalDeviceMemoryProperties(m_context, m_gpuIndex, physicalDevice, &m_memoryProperties);
 
   // Retrieving the max allocation size, can be lowered with maxSize
   VkPhysicalDeviceProperties2            prop2{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
   VkPhysicalDeviceMaintenance3Properties vkProp{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_3_PROPERTIES};
   prop2.pNext = &vkProp;
-  rmaDmaVkGetPhysicalDeviceProperties2(physicalDevice, &prop2);
+  rmaDmaVkGetPhysicalDeviceProperties2(m_context, m_gpuIndex, physicalDevice, &prop2);
   m_maxAllocationSize = maxSize > 0 ? std::min(maxSize, vkProp.maxMemoryAllocationSize) : vkProp.maxMemoryAllocationSize;
 
 
@@ -304,9 +306,9 @@ void DeviceMemoryAllocator::freeAll()
 
     if(it.mapped)
     {
-      rmaDmaVkUnmapMemory(m_device, it.mem);
+      rmaDmaVkUnmapMemory(m_context, m_gpuIndex, m_device, it.mem);
     }
-    rmaDmaVkFreeMemory(m_device, it.mem, nullptr);
+    rmaDmaVkFreeMemory(m_context, m_gpuIndex, m_device, it.mem, nullptr);
   }
 
   m_allocations.clear();
@@ -329,14 +331,14 @@ void DeviceMemoryAllocator::deinit()
       assert("not all blocks were unmapped properly");
       if(it.mem)
       {
-        rmaDmaVkUnmapMemory(m_device, it.mem);
+        rmaDmaVkUnmapMemory(m_context, m_gpuIndex, m_device, it.mem);
       }
     }
     if(it.mem)
     {
       if(it.isFirst && m_keepFirst)
       {
-        rmaDmaVkFreeMemory(m_device, it.mem, nullptr);
+        rmaDmaVkFreeMemory(m_context, m_gpuIndex, m_device, it.mem, nullptr);
       }
       else
       {
@@ -680,7 +682,7 @@ void* DeviceMemoryAllocator::map(AllocationID allocationID, VkResult *pResult)
 
   if(!block.mapped)
   {
-    VkResult result = rmaDmaVkMapMemory(m_device, block.mem, 0, block.allocationSize, 0, (void**)&block.mapped);
+    VkResult result = rmaDmaVkMapMemory(m_context, m_gpuIndex, m_device, block.mem, 0, block.allocationSize, 0, (void**)&block.mapped);
     if (pResult)
     {
       *pResult = result;
@@ -699,7 +701,7 @@ void DeviceMemoryAllocator::unmap(AllocationID allocationID)
   if(--block.mapCount == 0)
   {
     block.mapped = nullptr;
-    rmaDmaVkUnmapMemory(m_device, block.mem);
+    rmaDmaVkUnmapMemory(m_context, m_gpuIndex, m_device, block.mem);
   }
 }
 
@@ -722,7 +724,7 @@ VkImage DeviceMemoryAllocator::createImage(const VkImageCreateInfo& createInfo,
 
   imageReqs.image = image;
   memReqs.pNext   = &dedicatedRegs;
-  rmaDmaVkGetImageMemoryRequirements2(m_device, &imageReqs, &memReqs);
+  rmaDmaVkGetImageMemoryRequirements2(m_context, m_gpuIndex, m_device, &imageReqs, &memReqs);
 
   VkBool32 useDedicated = m_forceDedicatedAllocation || dedicatedRegs.prefersDedicatedAllocation;
 
@@ -735,7 +737,7 @@ VkImage DeviceMemoryAllocator::createImage(const VkImageCreateInfo& createInfo,
 
   if(allocation.mem == VK_NULL_HANDLE)
   {
-    rmaDmaVkDestroyImage(m_device, image, nullptr);
+    rmaDmaVkDestroyImage(m_context, m_gpuIndex, m_device, image, nullptr);
     result = VK_ERROR_OUT_OF_POOL_MEMORY;
     return VK_NULL_HANDLE;
   }
@@ -745,10 +747,10 @@ VkImage DeviceMemoryAllocator::createImage(const VkImageCreateInfo& createInfo,
   bindInfos.memory                = allocation.mem;
   bindInfos.memoryOffset          = allocation.offset;
 
-  result = rmaDmaVkBindImageMemory2(m_device, 1, &bindInfos);
+  result = rmaDmaVkBindImageMemory2(m_context, m_gpuIndex, m_device, 1, &bindInfos);
   if(result != VK_SUCCESS)
   {
-    rmaDmaVkDestroyImage(m_device, image, nullptr);
+    rmaDmaVkDestroyImage(m_context, m_gpuIndex, m_device, image, nullptr);
     return VK_NULL_HANDLE;
   }
 
@@ -775,7 +777,7 @@ VkBuffer DeviceMemoryAllocator::createBuffer(const VkBufferCreateInfo& createInf
 
   bufferReqs.buffer = buffer;
   memReqs.pNext     = &dedicatedRegs;
-  rmaDmaVkGetBufferMemoryRequirements2(m_device, &bufferReqs, &memReqs);
+  rmaDmaVkGetBufferMemoryRequirements2(m_context, m_gpuIndex, m_device, &bufferReqs, &memReqs);
 
   // for buffers don't use "preferred", but only requires
   VkBool32 useDedicated = m_forceDedicatedAllocation || dedicatedRegs.requiresDedicatedAllocation;
@@ -788,7 +790,7 @@ VkBuffer DeviceMemoryAllocator::createBuffer(const VkBufferCreateInfo& createInf
 
   if(allocation.mem == VK_NULL_HANDLE)
   {
-    rmaDmaVkDestroyBuffer(m_device, buffer, nullptr);
+    rmaDmaVkDestroyBuffer(m_context, m_gpuIndex, m_device, buffer, nullptr);
     result = VK_ERROR_OUT_OF_POOL_MEMORY;
     return VK_NULL_HANDLE;
   }
@@ -798,10 +800,10 @@ VkBuffer DeviceMemoryAllocator::createBuffer(const VkBufferCreateInfo& createInf
   bindInfos.memory                 = allocation.mem;
   bindInfos.memoryOffset           = allocation.offset;
 
-  result = rmaDmaVkBindBufferMemory2(m_device, 1, &bindInfos);
+  result = rmaDmaVkBindBufferMemory2(m_context, m_gpuIndex, m_device, 1, &bindInfos);
   if(result != VK_SUCCESS)
   {
-    rmaDmaVkDestroyBuffer(m_device, buffer, nullptr);
+    rmaDmaVkDestroyBuffer(m_context, m_gpuIndex, m_device, buffer, nullptr);
     return VK_NULL_HANDLE;
   }
 

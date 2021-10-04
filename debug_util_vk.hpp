@@ -39,14 +39,16 @@ class DebugUtil
 {
 public:
   DebugUtil() = default;
-  DebugUtil(VkDevice device)
-      : m_device(device)
+  DebugUtil(RedContext context, unsigned gpuIndex, VkDevice device)
+      : m_context(context)
+      , m_gpuIndex(gpuIndex)
+      , m_device(device)
   {
   }
 
   static void setEnabled(bool state) { s_enabled = state; }
 
-  void setup(VkDevice device) { m_device = device; }
+  void setup(RedContext context, unsigned gpuIndex, VkDevice device) { m_context = context; m_gpuIndex = gpuIndex; m_device = device; }
 
   //
   //---------------------------------------------------------------------------
@@ -56,14 +58,14 @@ public:
     if(s_enabled)
     {
       VkDebugUtilsLabelEXT s{VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT, nullptr, label.c_str(), {1.0f, 1.0f, 1.0f, 1.0f}};
-      rmaDmaVkCmdBeginDebugUtilsLabelEXT(cmdBuf, &s);
+      rmaDmaVkCmdBeginDebugUtilsLabelEXT(m_context, m_gpuIndex, cmdBuf, &s);
     }
   }
   void endLabel(VkCommandBuffer cmdBuf)
   {
     if(s_enabled)
     {
-      rmaDmaVkCmdEndDebugUtilsLabelEXT(cmdBuf);
+      rmaDmaVkCmdEndDebugUtilsLabelEXT(m_context, m_gpuIndex, cmdBuf);
     }
   }
   void insertLabel(VkCommandBuffer cmdBuf, const std::string& label)
@@ -71,7 +73,7 @@ public:
     if(s_enabled)
     {
       VkDebugUtilsLabelEXT s{VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT, nullptr, label.c_str(), {1.0f, 1.0f, 1.0f, 1.0f}};
-      rmaDmaVkCmdInsertDebugUtilsLabelEXT(cmdBuf, &s);
+      rmaDmaVkCmdInsertDebugUtilsLabelEXT(m_context, m_gpuIndex, cmdBuf, &s);
     }
   }
   //
@@ -79,20 +81,22 @@ public:
   //
   struct ScopedCmdLabel
   {
-    ScopedCmdLabel(VkCommandBuffer cmdBuf, const std::string& label)
-        : m_cmdBuf(cmdBuf)
+    ScopedCmdLabel(RedContext context, unsigned gpuIndex, VkCommandBuffer cmdBuf, const std::string& label)
+        : m_context(context)
+        , m_gpuIndex(gpuIndex)
+        , m_cmdBuf(cmdBuf)
     {
       if(s_enabled)
       {
         VkDebugUtilsLabelEXT s{VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT, nullptr, label.c_str(), {1.0f, 1.0f, 1.0f, 1.0f}};
-        rmaDmaVkCmdBeginDebugUtilsLabelEXT(cmdBuf, &s);
+        rmaDmaVkCmdBeginDebugUtilsLabelEXT(context, gpuIndex, cmdBuf, &s);
       }
     }
     ~ScopedCmdLabel()
     {
       if(s_enabled)
       {
-        rmaDmaVkCmdEndDebugUtilsLabelEXT(m_cmdBuf);
+        rmaDmaVkCmdEndDebugUtilsLabelEXT(m_context, m_gpuIndex, m_cmdBuf);
       }
     }
     void setLabel(const std::string& label)
@@ -100,17 +104,21 @@ public:
       if(s_enabled)
       {
         VkDebugUtilsLabelEXT s{VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT, nullptr, label.c_str(), {1.0f, 1.0f, 1.0f, 1.0f}};
-        rmaDmaVkCmdInsertDebugUtilsLabelEXT(m_cmdBuf, &s);
+        rmaDmaVkCmdInsertDebugUtilsLabelEXT(m_context, m_gpuIndex, m_cmdBuf, &s);
       }
     }
 
   private:
+    RedContext      m_context;
+    unsigned        m_gpuIndex;
     VkCommandBuffer m_cmdBuf;
   };
 
-  ScopedCmdLabel scopeLabel(VkCommandBuffer cmdBuf, const std::string& label) { return ScopedCmdLabel(cmdBuf, label); }
+  ScopedCmdLabel scopeLabel(RedContext context, unsigned gpuIndex, VkCommandBuffer cmdBuf, const std::string& label) { return ScopedCmdLabel(context, gpuIndex, cmdBuf, label); }
 
 private:
+  RedContext  m_context{NULL};
+  unsigned    m_gpuIndex{0};
   VkDevice    m_device{VK_NULL_HANDLE};
   static bool s_enabled;
 };

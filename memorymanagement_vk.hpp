@@ -183,15 +183,19 @@ public:
   // system related
 
   DeviceMemoryAllocator() { m_debugName = "nvvk::DeviceMemoryAllocator:" + std::to_string((uint64_t)this); }
-  DeviceMemoryAllocator(VkDevice         device,
+  DeviceMemoryAllocator(RedContext       context,
+                        unsigned         gpuIndex,
+                        VkDevice         device,
                         VkPhysicalDevice physicalDevice,
                         VkDeviceSize     blockSize = NVVK_DEFAULT_MEMORY_BLOCKSIZE,
                         VkDeviceSize     maxSize   = 0)
   {
-    init(device, physicalDevice, blockSize, maxSize);
+    init(context, gpuIndex, device, physicalDevice, blockSize, maxSize);
   }
 
-  void init(VkDevice         device,
+  void init(RedContext       context,
+            unsigned         gpuIndex,
+            VkDevice         device,
             VkPhysicalDevice physicalDevice,
             VkDeviceSize     blockSize = NVVK_DEFAULT_MEMORY_BLOCKSIZE,
             VkDeviceSize     maxSize   = 0);
@@ -470,6 +474,8 @@ protected:
     BlockID      block{};
   };
 
+  RedContext   m_context           = NULL;
+  unsigned     m_gpuIndex          = 0;
   VkDevice     m_device            = VK_NULL_HANDLE;
   VkDeviceSize m_blockSize         = 0;
   VkDeviceSize m_allocatedSize     = 0;
@@ -530,23 +536,23 @@ protected:
   virtual VkResult allocBlockMemory(BlockID id, VkMemoryAllocateInfo& memInfo, VkDeviceMemory& deviceMemory, const std::string& name)
   {
     //s_allocDebugBias++;
-    return rmaDmaVkAllocateMemory(m_device, &memInfo, nullptr, &deviceMemory, name.c_str());
+    return rmaDmaVkAllocateMemory(m_context, m_gpuIndex, m_device, &memInfo, nullptr, &deviceMemory, name.c_str());
   }
   virtual void freeBlockMemory(BlockID id, VkDeviceMemory deviceMemory)
   {
     //s_allocDebugBias--;
-    rmaDmaVkFreeMemory(m_device, deviceMemory, nullptr);
+    rmaDmaVkFreeMemory(m_context, m_gpuIndex, m_device, deviceMemory, nullptr);
   }
   virtual void resizeBlocks(uint32_t count) {}
 
   virtual VkResult createBufferInternal(VkDevice device, const VkBufferCreateInfo* info, VkBuffer* buffer)
   {
-    return rmaDmaVkCreateBuffer(device, info, nullptr, buffer);
+    return rmaDmaVkCreateBuffer(m_context, m_gpuIndex, device, info, nullptr, buffer);
   }
 
   virtual VkResult createImageInternal(VkDevice device, const VkImageCreateInfo* info, VkImage* image)
   {
-    return rmaDmaVkCreateImage(device, info, nullptr, image);
+    return rmaDmaVkCreateImage(m_context, m_gpuIndex, device, info, nullptr, image);
   }
 };
 

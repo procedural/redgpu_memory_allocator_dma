@@ -27,20 +27,25 @@ namespace nvvk {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-MemAllocateInfo::MemAllocateInfo(const VkMemoryRequirements& memReqs, VkMemoryPropertyFlags memProps, bool isTilingOptimal)
-    : m_memReqs(memReqs)
+MemAllocateInfo::MemAllocateInfo(RedContext context, unsigned gpuIndex, const VkMemoryRequirements& memReqs, VkMemoryPropertyFlags memProps, bool isTilingOptimal)
+    : m_context(context)
+    , m_gpuIndex(gpuIndex)
+    , m_memReqs(memReqs)
     , m_memProps(memProps)
     , m_isTilingOptimal(isTilingOptimal)
 {
 }
 
-MemAllocateInfo::MemAllocateInfo(VkDevice device, VkBuffer buffer, VkMemoryPropertyFlags memProps)
+MemAllocateInfo::MemAllocateInfo(RedContext context, unsigned gpuIndex, VkDevice device, VkBuffer buffer, VkMemoryPropertyFlags memProps)
 {
+  m_context  = context;
+  m_gpuIndex = gpuIndex;
+
   VkBufferMemoryRequirementsInfo2 bufferReqs = {VK_STRUCTURE_TYPE_BUFFER_MEMORY_REQUIREMENTS_INFO_2, nullptr, buffer};
   VkMemoryDedicatedRequirements   dedicatedRegs = {VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS};
   VkMemoryRequirements2           memReqs       = {VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2, &dedicatedRegs};
 
-  rmaDmaVkGetBufferMemoryRequirements2(device, &bufferReqs, &memReqs);
+  rmaDmaVkGetBufferMemoryRequirements2(m_context, m_gpuIndex, device, &bufferReqs, &memReqs);
 
   m_memReqs  = memReqs.memoryRequirements;
   m_memProps = memProps;
@@ -53,13 +58,16 @@ MemAllocateInfo::MemAllocateInfo(VkDevice device, VkBuffer buffer, VkMemoryPrope
   setTilingOptimal(false);
 }
 
-MemAllocateInfo::MemAllocateInfo(VkDevice device, VkImage image, VkMemoryPropertyFlags memProps)
+MemAllocateInfo::MemAllocateInfo(RedContext context, unsigned gpuIndex, VkDevice device, VkImage image, VkMemoryPropertyFlags memProps)
 {
+  m_context  = context;
+  m_gpuIndex = gpuIndex;
+
   VkImageMemoryRequirementsInfo2 imageReqs     = {VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2, nullptr, image};
   VkMemoryDedicatedRequirements  dedicatedRegs = {VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS};
   VkMemoryRequirements2          memReqs       = {VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2, &dedicatedRegs};
 
-  rmaDmaVkGetImageMemoryRequirements2(device, &imageReqs, &memReqs);
+  rmaDmaVkGetImageMemoryRequirements2(m_context, m_gpuIndex, device, &imageReqs, &memReqs);
 
   m_memReqs  = memReqs.memoryRequirements;
   m_memProps = memProps;
