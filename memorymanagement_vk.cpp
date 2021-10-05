@@ -705,31 +705,32 @@ void DeviceMemoryAllocator::unmap(AllocationID allocationID)
   }
 }
 
-VkImage DeviceMemoryAllocator::createImage(const VkImageCreateInfo& createInfo,
-                                           AllocationID&            allocationID,
-                                           VkMemoryPropertyFlags    memProps,
-                                           VkResult&                result)
+RedVkImage DeviceMemoryAllocator::createImage(const VkImageCreateInfo& createInfo,
+                                              AllocationID&            allocationID,
+                                              VkMemoryPropertyFlags    memProps,
+                                              VkResult&                result)
 {
-  VkImage image;
+  RedVkImage image;
 
   assert(createInfo.extent.width && createInfo.extent.height && createInfo.extent.depth);
 
   result = createImageInternal(m_device, &createInfo, &image);
   if(result != VK_SUCCESS)
-    return VK_NULL_HANDLE;
+  {
+    image = {};
+    return image;
+  }
 
   VkMemoryRequirements2          memReqs       = {VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2};
   VkMemoryDedicatedRequirements  dedicatedRegs = {VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS};
-  VkImageMemoryRequirementsInfo2 imageReqs     = {VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2};
 
-  imageReqs.image = image;
-  memReqs.pNext   = &dedicatedRegs;
-  rmaDmaVkGetImageMemoryRequirements2(m_context, m_gpuIndex, m_device, &imageReqs, &memReqs);
+  memReqs.pNext = &dedicatedRegs;
+  rmaDmaVkGetImageMemoryRequirements2(m_context, m_gpuIndex, m_device, &image, &memReqs);
 
   VkBool32 useDedicated = m_forceDedicatedAllocation || dedicatedRegs.prefersDedicatedAllocation;
 
   VkMemoryDedicatedAllocateInfo dedicatedInfo = {VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO};
-  dedicatedInfo.image                         = image;
+  dedicatedInfo.image                         = image.handle;
 
   allocationID          = alloc(memReqs.memoryRequirements, memProps, createInfo.tiling == VK_IMAGE_TILING_LINEAR,
                        useDedicated ? &dedicatedInfo : nullptr);
@@ -737,84 +738,88 @@ VkImage DeviceMemoryAllocator::createImage(const VkImageCreateInfo& createInfo,
 
   if(allocation.mem == VK_NULL_HANDLE)
   {
-    rmaDmaVkDestroyImage(m_context, m_gpuIndex, m_device, image, nullptr);
+    rmaDmaVkDestroyImage(m_context, m_gpuIndex, m_device, image.handle, nullptr);
     result = VK_ERROR_OUT_OF_POOL_MEMORY;
-    return VK_NULL_HANDLE;
+    image = {};
+    return image;
   }
 
   VkBindImageMemoryInfo bindInfos = {VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO};
-  bindInfos.image                 = image;
+  bindInfos.image                 = image.handle;
   bindInfos.memory                = allocation.mem;
   bindInfos.memoryOffset          = allocation.offset;
 
   result = rmaDmaVkBindImageMemory2(m_context, m_gpuIndex, m_device, 1, &bindInfos);
   if(result != VK_SUCCESS)
   {
-    rmaDmaVkDestroyImage(m_context, m_gpuIndex, m_device, image, nullptr);
-    return VK_NULL_HANDLE;
+    rmaDmaVkDestroyImage(m_context, m_gpuIndex, m_device, image.handle, nullptr);
+    image = {};
+    return image;
   }
 
   return image;
 }
-VkBuffer DeviceMemoryAllocator::createBuffer(const VkBufferCreateInfo& createInfo,
-                                             AllocationID&             allocationID,
-                                             VkMemoryPropertyFlags     memProps,
-                                             VkResult&                 result)
+
+RedVkBuffer DeviceMemoryAllocator::createBuffer(const VkBufferCreateInfo& createInfo,
+                                                AllocationID&             allocationID,
+                                                VkMemoryPropertyFlags     memProps,
+                                                VkResult&                 result)
 {
-  VkBuffer buffer;
+  RedVkBuffer buffer;
 
   assert(createInfo.size);
 
   result = createBufferInternal(m_device, &createInfo, &buffer);
   if(result != VK_SUCCESS)
   {
-    return VK_NULL_HANDLE;
+    buffer = {};
+    return buffer;
   }
 
   VkMemoryRequirements2           memReqs       = {VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2};
   VkMemoryDedicatedRequirements   dedicatedRegs = {VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS};
-  VkBufferMemoryRequirementsInfo2 bufferReqs    = {VK_STRUCTURE_TYPE_BUFFER_MEMORY_REQUIREMENTS_INFO_2};
 
-  bufferReqs.buffer = buffer;
-  memReqs.pNext     = &dedicatedRegs;
-  rmaDmaVkGetBufferMemoryRequirements2(m_context, m_gpuIndex, m_device, &bufferReqs, &memReqs);
+  memReqs.pNext = &dedicatedRegs;
+  rmaDmaVkGetBufferMemoryRequirements2(m_context, m_gpuIndex, m_device, &buffer, &memReqs);
 
   // for buffers don't use "preferred", but only requires
   VkBool32 useDedicated = m_forceDedicatedAllocation || dedicatedRegs.requiresDedicatedAllocation;
 
   VkMemoryDedicatedAllocateInfo dedicatedInfo = {VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO};
-  dedicatedInfo.buffer                        = buffer;
+  dedicatedInfo.buffer                        = buffer.handle;
 
   allocationID          = alloc(memReqs.memoryRequirements, memProps, true, useDedicated ? &dedicatedInfo : nullptr);
   Allocation allocation = allocationID.isValid() ? getAllocation(allocationID) : Allocation();
 
   if(allocation.mem == VK_NULL_HANDLE)
   {
-    rmaDmaVkDestroyBuffer(m_context, m_gpuIndex, m_device, buffer, nullptr);
+    rmaDmaVkDestroyBuffer(m_context, m_gpuIndex, m_device, buffer.handle, nullptr);
     result = VK_ERROR_OUT_OF_POOL_MEMORY;
-    return VK_NULL_HANDLE;
+    buffer = {};
+    return buffer;
   }
 
   VkBindBufferMemoryInfo bindInfos = {VK_STRUCTURE_TYPE_BIND_BUFFER_MEMORY_INFO};
-  bindInfos.buffer                 = buffer;
+  bindInfos.buffer                 = buffer.handle;
   bindInfos.memory                 = allocation.mem;
   bindInfos.memoryOffset           = allocation.offset;
 
   result = rmaDmaVkBindBufferMemory2(m_context, m_gpuIndex, m_device, 1, &bindInfos);
   if(result != VK_SUCCESS)
   {
-    rmaDmaVkDestroyBuffer(m_context, m_gpuIndex, m_device, buffer, nullptr);
-    return VK_NULL_HANDLE;
+    rmaDmaVkDestroyBuffer(m_context, m_gpuIndex, m_device, buffer.handle, nullptr);
+    buffer = {};
+    return buffer;
   }
 
   return buffer;
 }
 
-VkBuffer DeviceMemoryAllocator::createBuffer(VkDeviceSize          size,
-                                             VkBufferUsageFlags    usage,
-                                             AllocationID&         allocationID,
-                                             VkMemoryPropertyFlags memProps,
-                                             VkResult&             result)
+RedVkBuffer DeviceMemoryAllocator::createBuffer(VkDeviceSize          size,
+                                                VkBufferUsageFlags    usage,
+                                                AllocationID&         allocationID,
+                                                VkMemoryPropertyFlags memProps,
+                                                VkResult&             result)
 {
   VkBufferCreateInfo createInfo = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
   createInfo.usage              = usage | m_defaultBufferUsageFlags | VK_BUFFER_USAGE_TRANSFER_DST_BIT;

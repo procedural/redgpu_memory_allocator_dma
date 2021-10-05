@@ -349,50 +349,50 @@ public:
   // subsequent createBuffers will also use these flags
   inline void setDefaultBufferUsageFlags(VkBufferUsageFlags usage) { m_defaultBufferUsageFlags = usage; }
 
-  VkImage createImage(const VkImageCreateInfo& createInfo, AllocationID& allocationID, VkMemoryPropertyFlags memProps, VkResult& result);
-  VkImage createImage(const VkImageCreateInfo& createInfo, AllocationID& allocationID, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+  RedVkImage createImage(const VkImageCreateInfo& createInfo, AllocationID& allocationID, VkMemoryPropertyFlags memProps, VkResult& result);
+  RedVkImage createImage(const VkImageCreateInfo& createInfo, AllocationID& allocationID, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
   {
     VkResult result;
     return createImage(createInfo, allocationID, memProps, result);
   }
-  VkImage createImage(const VkImageCreateInfo& createInfo, VkMemoryPropertyFlags memProps, VkResult& result)
+  RedVkImage createImage(const VkImageCreateInfo& createInfo, VkMemoryPropertyFlags memProps, VkResult& result)
   {
     AllocationID id;
     return createImage(createInfo, id, memProps, result);
   }
-  VkImage createImage(const VkImageCreateInfo& createInfo, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+  RedVkImage createImage(const VkImageCreateInfo& createInfo, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
   {
     AllocationID id;
     return createImage(createInfo, id, memProps);
   }
 
 
-  VkBuffer createBuffer(const VkBufferCreateInfo& createInfo, AllocationID& allocationID, VkMemoryPropertyFlags memProps, VkResult& result);
-  VkBuffer createBuffer(const VkBufferCreateInfo& createInfo, AllocationID& allocationID, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+  RedVkBuffer createBuffer(const VkBufferCreateInfo& createInfo, AllocationID& allocationID, VkMemoryPropertyFlags memProps, VkResult& result);
+  RedVkBuffer createBuffer(const VkBufferCreateInfo& createInfo, AllocationID& allocationID, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
   {
     VkResult result;
     return createBuffer(createInfo, allocationID, memProps, result);
   }
-  VkBuffer createBuffer(const VkBufferCreateInfo& createInfo, VkMemoryPropertyFlags memProps, VkResult& result)
+  RedVkBuffer createBuffer(const VkBufferCreateInfo& createInfo, VkMemoryPropertyFlags memProps, VkResult& result)
   {
     AllocationID id;
     return createBuffer(createInfo, id, memProps, result);
   }
-  VkBuffer createBuffer(const VkBufferCreateInfo& createInfo, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+  RedVkBuffer createBuffer(const VkBufferCreateInfo& createInfo, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
   {
     AllocationID id;
     return createBuffer(createInfo, id, memProps);
   }
 
-  VkBuffer createBuffer(VkDeviceSize size,
-                        VkBufferUsageFlags usage,  // combined with m_defaultBufferUsageFlags and VK_BUFFER_USAGE_TRANSFER_DST_BIT
-                        AllocationID&         allocationID,
-                        VkMemoryPropertyFlags memProps,
-                        VkResult&             result);
-  VkBuffer createBuffer(VkDeviceSize size,
-                        VkBufferUsageFlags usage,  // combined with m_defaultBufferUsageFlags and VK_BUFFER_USAGE_TRANSFER_DST_BIT
-                        AllocationID&         allocationID,
-                        VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+  RedVkBuffer createBuffer(VkDeviceSize size,
+                           VkBufferUsageFlags usage,  // combined with m_defaultBufferUsageFlags and VK_BUFFER_USAGE_TRANSFER_DST_BIT
+                           AllocationID&         allocationID,
+                           VkMemoryPropertyFlags memProps,
+                           VkResult&             result);
+  RedVkBuffer createBuffer(VkDeviceSize size,
+                           VkBufferUsageFlags usage,  // combined with m_defaultBufferUsageFlags and VK_BUFFER_USAGE_TRANSFER_DST_BIT
+                           AllocationID&         allocationID,
+                           VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
   {
     VkResult result;
     return createBuffer(size, usage, allocationID, memProps, result);
@@ -545,12 +545,12 @@ protected:
   }
   virtual void resizeBlocks(uint32_t count) {}
 
-  virtual VkResult createBufferInternal(VkDevice device, const VkBufferCreateInfo* info, VkBuffer* buffer)
+  virtual VkResult createBufferInternal(VkDevice device, const VkBufferCreateInfo* info, RedVkBuffer* buffer)
   {
     return rmaDmaVkCreateBuffer(m_context, m_gpuIndex, device, info, nullptr, buffer);
   }
 
-  virtual VkResult createImageInternal(VkDevice device, const VkImageCreateInfo* info, VkImage* image)
+  virtual VkResult createImageInternal(VkDevice device, const VkImageCreateInfo* info, RedVkImage* image)
   {
     return rmaDmaVkCreateImage(m_context, m_gpuIndex, device, info, nullptr, image);
   }

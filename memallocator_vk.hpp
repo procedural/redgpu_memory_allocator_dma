@@ -52,8 +52,8 @@ public:
   );
 
   // Convenience constructures that infer the allocation information from the Vulkan objects directly
-  MemAllocateInfo(RedContext context, unsigned gpuIndex, VkDevice device, VkBuffer buffer, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-  MemAllocateInfo(RedContext context, unsigned gpuIndex, VkDevice device, VkImage image, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  MemAllocateInfo(RedContext context, unsigned gpuIndex, VkDevice device, const RedVkBuffer * buffer, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  MemAllocateInfo(RedContext context, unsigned gpuIndex, VkDevice device, const RedVkImage * image, VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
   // Determines which heap to allocate from
   MemAllocateInfo& setMemoryProperties(VkMemoryPropertyFlags flags);
