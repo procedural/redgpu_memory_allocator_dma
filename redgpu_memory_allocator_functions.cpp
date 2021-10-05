@@ -44,7 +44,7 @@ REDGPU_DECLSPEC void REDGPU_API rmaDmaVkGetPhysicalDeviceMemoryProperties(RedCon
   pMemoryProperties[0] = properties;
 }
 
-REDGPU_DECLSPEC RedStatus REDGPU_API rmaDmaVkAllocateMemory(RedContext context, unsigned gpuIndex, VkDevice device, const VkMemoryAllocateInfo * pAllocateInfo, const VkAllocationCallbacks * pAllocator, VkDeviceMemory * pMemory, const char * name) {
+REDGPU_DECLSPEC VkResult REDGPU_API rmaDmaVkAllocateMemory(RedContext context, unsigned gpuIndex, VkDevice device, const VkMemoryAllocateInfo * pAllocateInfo, const VkAllocationCallbacks * pAllocator, VkDeviceMemory * pMemory, const char * name) {
   RedStatuses statuses = {};
   if (context->gpus[gpuIndex].memoryTypes[pAllocateInfo->memoryTypeIndex].isCpuMappable == 1) {
     // NOTE(Constantine): Pass array from DMA to RMA in future.
@@ -53,33 +53,33 @@ REDGPU_DECLSPEC RedStatus REDGPU_API rmaDmaVkAllocateMemory(RedContext context, 
   } else {
     redMemoryAllocate(context, (RedHandleGpu)device, name, pAllocateInfo->allocationSize, pAllocateInfo->memoryTypeIndex, 0, 0, 0, (RedHandleMemory *)pMemory, &statuses, 0, 0, 0);
   }
-  return statuses.statusError;
+  return (VkResult)statuses.statusError;
 }
 
 REDGPU_DECLSPEC void REDGPU_API rmaDmaVkFreeMemory(RedContext context, unsigned gpuIndex, VkDevice device, VkDeviceMemory memory, const VkAllocationCallbacks * pAllocator) {
   redMemoryFree(context, (RedHandleGpu)device, (RedHandleMemory)memory, 0, 0, 0);
 }
 
-REDGPU_DECLSPEC RedStatus REDGPU_API rmaDmaVkMapMemory(RedContext context, unsigned gpuIndex, VkDevice device, VkDeviceMemory memory, VkDeviceSize offset, VkDeviceSize size, VkMemoryMapFlags flags, void ** ppData) {
+REDGPU_DECLSPEC VkResult REDGPU_API rmaDmaVkMapMemory(RedContext context, unsigned gpuIndex, VkDevice device, VkDeviceMemory memory, VkDeviceSize offset, VkDeviceSize size, VkMemoryMapFlags flags, void ** ppData) {
   RedStatuses statuses = {};
   redMemoryMap(context, (RedHandleGpu)device, (RedHandleMemory)memory, offset, size, ppData, &statuses, 0, 0, 0);
-  return statuses.statusError;
+  return (VkResult)statuses.statusError;
 }
 
 REDGPU_DECLSPEC void REDGPU_API rmaDmaVkUnmapMemory(RedContext context, unsigned gpuIndex, VkDevice device, VkDeviceMemory memory) {
   redMemoryUnmap(context, (RedHandleGpu)device, (RedHandleMemory)memory, 0, 0, 0);
 }
 
-REDGPU_DECLSPEC RedStatus REDGPU_API rmaDmaVkBindBufferMemory2(RedContext context, unsigned gpuIndex, VkDevice device, uint32_t bindInfoCount, const VkBindBufferMemoryInfo * pBindInfos) {
+REDGPU_DECLSPEC VkResult REDGPU_API rmaDmaVkBindBufferMemory2(RedContext context, unsigned gpuIndex, VkDevice device, uint32_t bindInfoCount, const VkBindBufferMemoryInfo * pBindInfos) {
   RedStatuses statuses = {};
   redMemorySet(context, (RedHandleGpu)device, bindInfoCount, (const RedMemoryArray *)pBindInfos, 0, 0, &statuses, 0, 0, 0);
-  return statuses.statusError;
+  return (VkResult)statuses.statusError;
 }
 
-REDGPU_DECLSPEC RedStatus REDGPU_API rmaDmaVkBindImageMemory2(RedContext context, unsigned gpuIndex, VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo * pBindInfos) {
+REDGPU_DECLSPEC VkResult REDGPU_API rmaDmaVkBindImageMemory2(RedContext context, unsigned gpuIndex, VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo * pBindInfos) {
   RedStatuses statuses = {};
   redMemorySet(context, (RedHandleGpu)device, 0, 0, bindInfoCount, (const RedMemoryImage *)pBindInfos, &statuses, 0, 0, 0);
-  return statuses.statusError;
+  return (VkResult)statuses.statusError;
 }
 
 REDGPU_DECLSPEC void REDGPU_API rmaDmaVkGetBufferMemoryRequirements2(RedContext context, unsigned gpuIndex, VkDevice device, const VkBufferMemoryRequirementsInfo2 * pInfo, VkMemoryRequirements2 * pMemoryRequirements) {
@@ -106,7 +106,7 @@ REDGPU_DECLSPEC void REDGPU_API rmaDmaVkGetImageMemoryRequirements2(RedContext c
   // NOTE(Constantine): Explicitly ignoring VkMemoryDedicatedRequirements in pMemoryRequirements->pNext.
 }
 
-REDGPU_DECLSPEC RedStatus REDGPU_API rmaDmaVkCreateBuffer(RedContext context, unsigned gpuIndex, VkDevice device, const VkBufferCreateInfo * pCreateInfo, const VkAllocationCallbacks * pAllocator, VkBuffer * pBuffer) {
+REDGPU_DECLSPEC VkResult REDGPU_API rmaDmaVkCreateBuffer(RedContext context, unsigned gpuIndex, VkDevice device, const VkBufferCreateInfo * pCreateInfo, const VkAllocationCallbacks * pAllocator, VkBuffer * pBuffer) {
   RedStatuses statuses = {};
   // NOTE(Constantine): Pass structuredBufferElementBytesCount from DMA to RMA in future.
   uint64_t structuredBufferElementBytesCount = 0;
@@ -119,7 +119,7 @@ REDGPU_DECLSPEC RedStatus REDGPU_API rmaDmaVkCreateBuffer(RedContext context, un
     std::lock_guard<std::mutex> __mapArraysMutexScope(__REDGPU_MEMORY_ALLOCATOR_DMA_FUNCTIONS_GLOBAL_711d87b049aded9364468c79f432a0d3e1b6f3de_mapArraysMutex);
     __REDGPU_MEMORY_ALLOCATOR_DMA_FUNCTIONS_GLOBAL_711d87b049aded9364468c79f432a0d3e1b6f3de_mapArrays[array.handle] = array;
   }
-  return statuses.statusError;
+  return (VkResult)statuses.statusError;
 }
 
 REDGPU_DECLSPEC void REDGPU_API rmaDmaVkDestroyBuffer(RedContext context, unsigned gpuIndex, VkDevice device, VkBuffer buffer, const VkAllocationCallbacks * pAllocator) {
@@ -130,7 +130,7 @@ REDGPU_DECLSPEC void REDGPU_API rmaDmaVkDestroyBuffer(RedContext context, unsign
   }
 }
 
-REDGPU_DECLSPEC RedStatus REDGPU_API rmaDmaVkCreateImage(RedContext context, unsigned gpuIndex, VkDevice device, const VkImageCreateInfo * pCreateInfo, const VkAllocationCallbacks * pAllocator, VkImage * pImage) {
+REDGPU_DECLSPEC VkResult REDGPU_API rmaDmaVkCreateImage(RedContext context, unsigned gpuIndex, VkDevice device, const VkImageCreateInfo * pCreateInfo, const VkAllocationCallbacks * pAllocator, VkImage * pImage) {
   RedStatuses statuses = {};
   RedImageDimensions imageDimensions = RED_IMAGE_DIMENSIONS_2D;
   if (pCreateInfo->imageType == VK_IMAGE_TYPE_1D) {
@@ -177,7 +177,7 @@ REDGPU_DECLSPEC RedStatus REDGPU_API rmaDmaVkCreateImage(RedContext context, uns
     std::lock_guard<std::mutex> __mapImagesMutexScope(__REDGPU_MEMORY_ALLOCATOR_DMA_FUNCTIONS_GLOBAL_711d87b049aded9364468c79f432a0d3e1b6f3de_mapImagesMutex);
     __REDGPU_MEMORY_ALLOCATOR_DMA_FUNCTIONS_GLOBAL_711d87b049aded9364468c79f432a0d3e1b6f3de_mapImages[image.handle] = image;
   }
-  return statuses.statusError;
+  return (VkResult)statuses.statusError;
 }
 
 REDGPU_DECLSPEC void REDGPU_API rmaDmaVkDestroyImage(RedContext context, unsigned gpuIndex, VkDevice device, VkImage image, const VkAllocationCallbacks * pAllocator) {

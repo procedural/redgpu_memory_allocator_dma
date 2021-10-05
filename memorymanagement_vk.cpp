@@ -682,7 +682,7 @@ void* DeviceMemoryAllocator::map(AllocationID allocationID, VkResult *pResult)
 
   if(!block.mapped)
   {
-    VkResult result = (VkResult)rmaDmaVkMapMemory(m_context, m_gpuIndex, m_device, block.mem, 0, block.allocationSize, 0, (void**)&block.mapped);
+    VkResult result = rmaDmaVkMapMemory(m_context, m_gpuIndex, m_device, block.mem, 0, block.allocationSize, 0, (void**)&block.mapped);
     if (pResult)
     {
       *pResult = result;
@@ -747,7 +747,7 @@ VkImage DeviceMemoryAllocator::createImage(const VkImageCreateInfo& createInfo,
   bindInfos.memory                = allocation.mem;
   bindInfos.memoryOffset          = allocation.offset;
 
-  result = (VkResult)rmaDmaVkBindImageMemory2(m_context, m_gpuIndex, m_device, 1, &bindInfos);
+  result = rmaDmaVkBindImageMemory2(m_context, m_gpuIndex, m_device, 1, &bindInfos);
   if(result != VK_SUCCESS)
   {
     rmaDmaVkDestroyImage(m_context, m_gpuIndex, m_device, image, nullptr);
@@ -800,7 +800,7 @@ VkBuffer DeviceMemoryAllocator::createBuffer(const VkBufferCreateInfo& createInf
   bindInfos.memory                 = allocation.mem;
   bindInfos.memoryOffset           = allocation.offset;
 
-  result = (VkResult)rmaDmaVkBindBufferMemory2(m_context, m_gpuIndex, m_device, 1, &bindInfos);
+  result = rmaDmaVkBindBufferMemory2(m_context, m_gpuIndex, m_device, 1, &bindInfos);
   if(result != VK_SUCCESS)
   {
     rmaDmaVkDestroyBuffer(m_context, m_gpuIndex, m_device, buffer, nullptr);

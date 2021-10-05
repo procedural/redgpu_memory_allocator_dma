@@ -536,7 +536,7 @@ protected:
   virtual VkResult allocBlockMemory(BlockID id, VkMemoryAllocateInfo& memInfo, VkDeviceMemory& deviceMemory, const std::string& name)
   {
     //s_allocDebugBias++;
-    return (VkResult)rmaDmaVkAllocateMemory(m_context, m_gpuIndex, m_device, &memInfo, nullptr, &deviceMemory, name.c_str());
+    return rmaDmaVkAllocateMemory(m_context, m_gpuIndex, m_device, &memInfo, nullptr, &deviceMemory, name.c_str());
   }
   virtual void freeBlockMemory(BlockID id, VkDeviceMemory deviceMemory)
   {
@@ -547,12 +547,12 @@ protected:
 
   virtual VkResult createBufferInternal(VkDevice device, const VkBufferCreateInfo* info, VkBuffer* buffer)
   {
-    return (VkResult)rmaDmaVkCreateBuffer(m_context, m_gpuIndex, device, info, nullptr, buffer);
+    return rmaDmaVkCreateBuffer(m_context, m_gpuIndex, device, info, nullptr, buffer);
   }
 
   virtual VkResult createImageInternal(VkDevice device, const VkImageCreateInfo* info, VkImage* image)
   {
-    return (VkResult)rmaDmaVkCreateImage(m_context, m_gpuIndex, device, info, nullptr, image);
+    return rmaDmaVkCreateImage(m_context, m_gpuIndex, device, info, nullptr, image);
   }
 };
 
